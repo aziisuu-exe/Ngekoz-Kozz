@@ -1,0 +1,41 @@
+import type { Metadata } from "next";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
+import "./globals.css";
+import { cn } from "@/lib/utils";
+import { AppSessionProvider } from "@/components/providers/session-provider";
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Ngekoz — Cari & Sewa Kos Modern",
+  description: "Platform pencarian kos terbaik di Indonesia",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="id"
+      className={cn(
+        "h-full antialiased scroll-smooth", 
+        geistSans.variable, 
+        geistMono.variable, 
+        "font-sans", 
+        inter.variable
+      )}
+    >
+      {/* HAPUS MainNavbar DARI SINI */}
+      {/* Tambahkan bg-white text-gray-900 agar warna dasar stabil */}
+      <body className="min-h-full flex flex-col bg-white text-gray-900">
+        <AppSessionProvider>
+          {children}
+        </AppSessionProvider>
+      </body>
+    </html>
+  );
+}
