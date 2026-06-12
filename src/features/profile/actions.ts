@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { updateProfileSchema } from "./schemas";
+import { revalidatePath } from "next/cache"; // <-- 1. Import revalidatePath
 
 export async function updateProfileAction(formData: FormData) {
   const session = await auth();
@@ -31,11 +32,14 @@ export async function updateProfileAction(formData: FormData) {
 
     if (profilePhoto && profilePhoto.size > 0) {
       const fileNameStr = profilePhoto.name.toLowerCase();
-      if (!fileNameStr.endsWith('.jpg') && !fileNameStr.endsWith('.jpeg')) {
-        return { error: "Format foto ditolak. Harap unggah file .JPG atau .JPEG saja." };
+      const validExtensions = ['.jpg', '.png'];
+      
+      if (!validExtensions.some(ext => fileNameStr.endsWith(ext))) {
+        return { error: "Format foto ditolak. Harap unggah file .JPG, .PNG, atau .WEBP." };
       }
 
-      const uniqueFileName = `${session.user.id}-${Date.now()}.jpg`;
+      const ext = fileNameStr.split('.').pop();
+      const uniqueFileName = `${session.user.id}-${Date.now()}.${ext}`;
       const arrayBuffer = await profilePhoto.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
@@ -77,10 +81,12 @@ export async function updateProfileAction(formData: FormData) {
       .update(updatePayload)
       .eq('id', session.user.id);
 
-      if (updateError) {
-        console.error("Detail Error DB:", updateError); 
-        return { error: `Gagal menyimpan: ${updateError.message}` };
-      }
+    if (updateError) {
+      console.error("Detail Error DB:", updateError); 
+      return { error: `Gagal menyimpan: ${updateError.message}` };
+    }
+
+    revalidatePath("/", "layout");
 
     return { success: true, message: "Profil berhasil diperbarui!", newPhotoUrl: photoUrl };
   } catch (error) {
