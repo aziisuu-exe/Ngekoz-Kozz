@@ -243,7 +243,6 @@ export async function getSearchKos(
   }
 }
 
-// Interface untuk menampung data raksasa Detail Kos
 export interface KosDetailData {
   id: string | number;
   slug: string;
@@ -257,12 +256,10 @@ export interface KosDetailData {
   view_count: number;
   gender_type: string;
   
-  // Relasi Wilayah
   provinsi: string;
   kota: string;
   kecamatan: string;
   
-  // Relasi Owner (Pemilik)
   owner: {
     id: string;
     nama: string;
@@ -270,12 +267,41 @@ export interface KosDetailData {
     phone: string;
   };
 
-  // Array Relasi
-  foto_kos: { url: string; thumbnail: boolean }[];
-  kamar_kos: { price_per_month: number; price_per_day: number; kamar_tersedia: number }[];
-  fasilitas: { id: number; nama_fasilitas: string; icon: string }[];
-  aturan: { id: number; nama_aturan: string }[];
-  reviews: { id: number; rating: number; comment: string; created_at: string; users: { nama: string; profile_photo: string } }[];
+  foto_kos: { 
+    url: string; 
+    thumbnail: boolean 
+  }[];
+
+  kamar_kos: { 
+    id: number | string;
+    nomor_kamar: string;
+    ukuran: string;
+    price_per_month: number; 
+    price_per_day: number; 
+    kamar_tersedia: number 
+  }[];
+
+  fasilitas: { 
+    id: number; 
+    nama_fasilitas: string; 
+    icon: string 
+  }[];
+
+  aturan: { 
+    id: number; 
+    nama_aturan: string 
+  }[];
+
+  reviews: { 
+    id: number; 
+    rating: number; 
+    comment: string;
+    is_verified: boolean; 
+    created_at: string; 
+    users: { 
+      nama: string; 
+      profile_photo: string 
+    } }[];
 }
 
 export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | null> {
@@ -292,12 +318,12 @@ export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | 
         provinsi:id_provinsi (nama_provinsi),
         kota:id_kota (nama_kota),
         kecamatan:id_kecamatan (nama_kecamatan),
-        owner:users (id, nama, profile_photo, phone), 
+        owner:users!id_owner (id, nama, profile_photo, phone), 
         foto_kos (image_url, thumbnail),
-        kamar_kos (price_per_month, price_per_day, kamar_tersedia, is_available), 
+        kamar_kos (id, nomor_kamar, ukuran, price_per_month, price_per_day, kamar_tersedia, is_available), 
         fasilitas_kos ( fasilitas (id, nama_fasilitas, icon) ),
         aturan_kos ( aturan (id, nama_aturan) ),
-        review (id, rating, comment, created_at, users (nama, profile_photo))
+        review (id, rating, comment, is_verified, created_at, users (nama, profile_photo))
       `)
       .eq('slug', slug)
       .eq('is_active', true)
@@ -308,27 +334,36 @@ export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | 
       return null;
     }
 
-    // --- LOGIKA PENGGABUNGAN FOTO ---
-    // 1. Ambil foto dari foto_kos yang URL-nya BENAR-BENAR ADA (bukan string kosong)
     const rawFotoKos = (data.foto_kos || []).filter(
       (f: any) => f.url && f.url.trim() !== ""
     );
 
-    // 2. Ambil foto dari kamar_kos yang URL-nya BENAR-BENAR ADA
     const rawKamarPhotos = (data.kamar_kos || [])
       .filter((k: any) => k.image_url && k.image_url.trim() !== "")
-      .map((k: any) => ({ url: k.image_url, thumbnail: false })); // Jadikan formatnya sama
+      .map((k: any) => ({ url: k.image_url, thumbnail: false })); 
 
-    // 3. Gabungkan kedua sumber foto tersebut
     const combinedPhotos = (data.foto_kos || [])
       .filter((f: any) => f.image_url && f.image_url.trim() !== "")
       .map((f: any) => ({
-        url: f.image_url, // Memetakan image_url dari database ke properti url
+        url: f.image_url, 
         thumbnail: f.thumbnail
       }));
 
-    // 4. Urutkan agar yang thumbnail = true selalu berada di urutan pertama (Index 0)
     combinedPhotos.sort((a: any, b: any) => (b.thumbnail ? 1 : 0) - (a.thumbnail ? 1 : 0));
+    const rawOwner = data.owner;
+    const formattedOwner = Array.isArray(rawOwner) ? rawOwner[0] : rawOwner;
+
+    const formattedReviews = (data.review || []).map((rev: any) => {
+      const rawUser = rev.users;
+      return {
+        id: rev.id,
+        rating: Number(rev.rating) || 0,
+        comment: rev.comment || "",
+        is_verified: rev.is_verified || false,
+        created_at: rev.created_at,
+        users: Array.isArray(rawUser) ? rawUser[0] : (rawUser || { nama: "Anonymous", profile_photo: "" })
+      };
+    });
 
     return {
       id: data.id,
@@ -347,9 +382,8 @@ export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | 
       kota: data.kota?.nama_kota || "",
       kecamatan: data.kecamatan?.nama_kecamatan || "",
       
-      owner: data.owner || { id: "", nama: "Owner", profile_photo: "", phone: "" },
+      owner: formattedOwner || { id: "", nama: "Owner", profile_photo: "", phone: "" },
       
-      // Gunakan foto gabungan yang sudah bersih dari string kosong
       foto_kos: combinedPhotos,
       
       kamar_kos: (data.kamar_kos || []).filter((k: any) => k.is_available),
@@ -362,7 +396,7 @@ export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | 
         .map((ak: any) => ak.aturan)
         .filter((a: any) => a !== null),
         
-      reviews: data.review || []
+      reviews: formattedReviews
     };
 
   } catch (error) {
