@@ -49,7 +49,6 @@ export function KosCard({ kos }: KosCardProps) {
           <div className="flex justify-between items-center mb-2">
             <p className="text-xs font-medium text-gray-500 flex items-center gap-1 truncate max-w-[70%]">
               <IconMapPin size={14} className="text-purple-600 flex-shrink-0" />
-              {/* GANTI menggunakan kos.alamat */}
               <span className="truncate">{kos.alamat}</span>
             </p>
             <div className="flex items-center gap-3">
