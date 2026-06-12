@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export interface KosData {
   id: number | string;
+  slug: string;
   nama_kos: string;
   deskripsi: string;
   alamat: string;
@@ -27,6 +28,7 @@ export async function getRecommendedKos(): Promise<KosData[]> {
       .from('detail_kos')
       .select(`
         id,
+        slug,
         nama_kos,
         deskripsi,
         alamat,
@@ -71,6 +73,7 @@ export async function getRecommendedKos(): Promise<KosData[]> {
 
       return {
         id: kos.id,
+        slug: kos.slug,
         nama_kos: kos.nama_kos,
         deskripsi: kos.deskripsi || "Belum ada deskripsi",
         alamat: kos.alamat || "Lokasi belum ditentukan",
@@ -146,6 +149,7 @@ export async function getSearchKos(
       .from('detail_kos')
       .select(`
         id,
+        slug,
         nama_kos,
         deskripsi,
         alamat,
@@ -210,6 +214,7 @@ export async function getSearchKos(
 
       return {
         id: kos.id,
+        slug: kos.slug,
         nama_kos: kos.nama_kos,
         deskripsi: kos.deskripsi || "Belum ada deskripsi",
         alamat: kos.alamat || "Lokasi belum ditentukan",
@@ -235,5 +240,133 @@ export async function getSearchKos(
   } catch (error) {
     console.error("Terjadi kesalahan pencarian:", error);
     return { data: [], totalPages: 0, currentPage: 1, totalItems: 0 };
+  }
+}
+
+// Interface untuk menampung data raksasa Detail Kos
+export interface KosDetailData {
+  id: string | number;
+  slug: string;
+  nama_kos: string;
+  deskripsi: string;
+  alamat: string;
+  latitude: string;
+  longitude: string;
+  rating_avg: number;
+  total_review: number;
+  view_count: number;
+  gender_type: string;
+  
+  // Relasi Wilayah
+  provinsi: string;
+  kota: string;
+  kecamatan: string;
+  
+  // Relasi Owner (Pemilik)
+  owner: {
+    id: string;
+    nama: string;
+    profile_photo: string;
+    phone: string;
+  };
+
+  // Array Relasi
+  foto_kos: { url: string; thumbnail: boolean }[];
+  kamar_kos: { price_per_month: number; price_per_day: number; kamar_tersedia: number }[];
+  fasilitas: { id: number; nama_fasilitas: string; icon: string }[];
+  aturan: { id: number; nama_aturan: string }[];
+  reviews: { id: number; rating: number; comment: string; created_at: string; users: { nama: string; profile_photo: string } }[];
+}
+
+export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | null> {
+  try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data, error } = await supabaseAdmin
+      .from('detail_kos')
+      .select(`
+        *,
+        provinsi:id_provinsi (nama_provinsi),
+        kota:id_kota (nama_kota),
+        kecamatan:id_kecamatan (nama_kecamatan),
+        owner:users (id, nama, profile_photo, phone), 
+        foto_kos (image_url, thumbnail),
+        kamar_kos (price_per_month, price_per_day, kamar_tersedia, is_available), 
+        fasilitas_kos ( fasilitas (id, nama_fasilitas, icon) ),
+        aturan_kos ( aturan (id, nama_aturan) ),
+        review (id, rating, comment, created_at, users (nama, profile_photo))
+      `)
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !data) {
+      console.error("Gagal mengambil detail kos:", error?.message);
+      return null;
+    }
+
+    // --- LOGIKA PENGGABUNGAN FOTO ---
+    // 1. Ambil foto dari foto_kos yang URL-nya BENAR-BENAR ADA (bukan string kosong)
+    const rawFotoKos = (data.foto_kos || []).filter(
+      (f: any) => f.url && f.url.trim() !== ""
+    );
+
+    // 2. Ambil foto dari kamar_kos yang URL-nya BENAR-BENAR ADA
+    const rawKamarPhotos = (data.kamar_kos || [])
+      .filter((k: any) => k.image_url && k.image_url.trim() !== "")
+      .map((k: any) => ({ url: k.image_url, thumbnail: false })); // Jadikan formatnya sama
+
+    // 3. Gabungkan kedua sumber foto tersebut
+    const combinedPhotos = (data.foto_kos || [])
+      .filter((f: any) => f.image_url && f.image_url.trim() !== "")
+      .map((f: any) => ({
+        url: f.image_url, // Memetakan image_url dari database ke properti url
+        thumbnail: f.thumbnail
+      }));
+
+    // 4. Urutkan agar yang thumbnail = true selalu berada di urutan pertama (Index 0)
+    combinedPhotos.sort((a: any, b: any) => (b.thumbnail ? 1 : 0) - (a.thumbnail ? 1 : 0));
+
+    return {
+      id: data.id,
+      slug: data.slug,
+      nama_kos: data.nama_kos,
+      deskripsi: data.deskripsi || "Belum ada deskripsi.",
+      alamat: data.alamat,
+      latitude: data.latitude || "",
+      longitude: data.longitude || "",
+      rating_avg: data.rating_avg || 0,
+      total_review: data.total_review || data.review?.length || 0,
+      view_count: data.view_count || 0,
+      gender_type: data.gender_type || "campur",
+      
+      provinsi: data.provinsi?.nama_provinsi || "",
+      kota: data.kota?.nama_kota || "",
+      kecamatan: data.kecamatan?.nama_kecamatan || "",
+      
+      owner: data.owner || { id: "", nama: "Owner", profile_photo: "", phone: "" },
+      
+      // Gunakan foto gabungan yang sudah bersih dari string kosong
+      foto_kos: combinedPhotos,
+      
+      kamar_kos: (data.kamar_kos || []).filter((k: any) => k.is_available),
+      
+      fasilitas: (data.fasilitas_kos || [])
+        .map((fk: any) => fk.fasilitas)
+        .filter((f: any) => f !== null),
+        
+      aturan: (data.aturan_kos || [])
+        .map((ak: any) => ak.aturan)
+        .filter((a: any) => a !== null),
+        
+      reviews: data.review || []
+    };
+
+  } catch (error) {
+    console.error("Exception di getKosDetailBySlug:", error);
+    return null;
   }
 }

@@ -8,7 +8,6 @@ interface KosCardProps {
 }
 
 export function KosCard({ kos }: KosCardProps) {
-  // GANTI format harga menggunakan harga_termurah
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -23,7 +22,7 @@ export function KosCard({ kos }: KosCardProps) {
   };
 
   return (
-    <Link href={`/kos/${kos.id}`} className="group block h-full">
+    <Link href={`/kos/${kos.slug}`} className="group block h-full">
       <div className="flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 h-full">
         
         <div className="relative h-48 w-full overflow-hidden bg-gray-100">
