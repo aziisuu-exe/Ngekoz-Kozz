@@ -5,12 +5,16 @@ import {
   IconStarFilled, 
   IconEye, 
   IconShare, 
-  IconFlag, // <-- Ganti IconHeart jadi IconFlag
-  IconCamera // <-- Tambahkan icon kamera
+  IconFlag, 
+  IconCamera 
 } from "@tabler/icons-react";
 import Image from "next/image";
 import { KosPhotoGallery } from "@/features/properties/components/kos-photo-gallery";
 import { KosFacilities } from "@/features/properties/components/kos-facilities";
+import { KosRules } from "@/features/properties/components/kos-rules";
+import { KosLocation } from "@/features/properties/components/kos-location";
+import { KosReviews } from "@/features/properties/components/kos-reviews";
+import { BookingCard } from "@/features/properties/components/booking-card";
 
 export default async function DetailKosPage({
   params,
@@ -24,16 +28,14 @@ export default async function DetailKosPage({
     notFound();
   }
 
-  // Siapkan data foto untuk Grid Mozaik
   const photos = kos.foto_kos || [];
-  const mainPhoto = photos[0]; // Foto utama (kiri besar)
-  const otherPhotos = photos.slice(1, 5); // Maksimal 4 foto tambahan (kanan)
-  const remainingCount = photos.length > 5 ? photos.length - 5 : 0; // Sisa foto jika lebih dari 5
+  const mainPhoto = photos[0]; 
+  const otherPhotos = photos.slice(1, 5); 
+  const remainingCount = photos.length > 5 ? photos.length - 5 : 0; 
 
   return (
     <div className="w-full bg-white pb-24">
       
-      {/* 1. HEADER */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
@@ -59,7 +61,6 @@ export default async function DetailKosPage({
             <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold transition-colors">
               <IconShare size={18} /> Bagikan
             </button>
-            {/* Ubah tombol Simpan menjadi Laporkan */}
             <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 font-semibold transition-colors">
               <IconFlag size={18} /> Laporkan
             </button>
@@ -67,14 +68,11 @@ export default async function DetailKosPage({
         </div>
       </div>
 
-      {/* 2. AREA GALERI FOTO (GRID MOZAIK PREMIUM) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <KosPhotoGallery photos={kos.foto_kos} kosName={kos.nama_kos} />
       </div>
 
-      {/* 3. GRID UTAMA (KIRI: DETAIL, KANAN: CARD PEMBAYARAN) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        {/* ... (Isi grid layout detail dan card pemesanan biarkan sama seperti sebelumnya) ... */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           <div className="lg:col-span-2 space-y-12">
@@ -83,19 +81,26 @@ export default async function DetailKosPage({
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">{kos.deskripsi}</p>
             </section>
             <KosFacilities fasilitas={kos.fasilitas} />
-            <div className="p-8 border-2 border-dashed border-gray-200 rounded-2xl text-center text-gray-400">
-              [Area Fasilitas, Aturan, Google Maps, dan Review akan dibangun di sini]
-            </div>
+            <KosRules aturan={kos.aturan} />
+            <KosLocation 
+              latitude={kos.latitude}
+              longitude={kos.longitude}
+              alamat={`${kos.alamat}, ${kos.kecamatan}, ${kos.kota}`}
+              namaKos={kos.nama_kos}
+            />
+            <KosReviews 
+              reviews={kos.reviews}
+              ratingAvg={kos.rating_avg}
+              totalReview={kos.total_review}
+            />
           </div>
 
           <div className="lg:col-span-1">
-             <div className="sticky top-28 p-8 border border-gray-200 rounded-3xl shadow-xl shadow-gray-200/50">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Pesan Kamar</h3>
-                <p className="text-gray-500 mb-6">Mulai dari Rp 500.000 / bulan</p>
-                <div className="h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 mb-6">
-                  [Card Pembayaran & Chat Owner]
-                </div>
-             </div>
+            <BookingCard 
+              kamarKos={kos.kamar_kos} 
+              owner={kos.owner} 
+              namaKos={kos.nama_kos}
+            />
           </div>
 
         </div>

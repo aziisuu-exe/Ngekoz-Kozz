@@ -81,12 +81,10 @@ export default function ProfileSettingsPage() {
           {errorMsg && <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">{errorMsg}</div>}
           {successMsg && <div className="p-4 bg-green-50 text-green-700 rounded-xl text-sm font-medium border border-green-100">{successMsg}</div>}
 
-          {/* Bagian Data Diri */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Informasi Umum</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Foto Profil */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Unggah Foto Profil (.JPG)</label>
                 <input
@@ -146,7 +144,6 @@ export default function ProfileSettingsPage() {
 
           <hr className="border-gray-100" />
 
-          {/* Bagian Keamanan (Ganti Password) */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-1">
               <IconShieldCheck size={20} className="text-green-600" /> Keamanan Akun
@@ -175,7 +172,6 @@ export default function ProfileSettingsPage() {
         </form>
       </div>
 
-      {/* PENGHAPUSAN AKUN */}
       <div className="bg-red-50 rounded-2xl shadow-sm border border-red-100 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <h3 className="text-lg font-bold text-red-800 flex items-center gap-2 mb-2">
