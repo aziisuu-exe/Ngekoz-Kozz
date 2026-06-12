@@ -29,8 +29,6 @@ export default function RootLayout({
         inter.variable
       )}
     >
-      {/* HAPUS MainNavbar DARI SINI */}
-      {/* Tambahkan bg-white text-gray-900 agar warna dasar stabil */}
       <body className="min-h-full flex flex-col bg-white text-gray-900">
         <AppSessionProvider>
           {children}
