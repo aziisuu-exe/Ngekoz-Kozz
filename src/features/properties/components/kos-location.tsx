@@ -12,12 +12,9 @@ interface KosLocationProps {
 
 export function KosLocation({ latitude, longitude, alamat, namaKos }: KosLocationProps) {
   const [isNavigating, setIsNavigating] = useState(false);
-
-  // Parse string koordinat dari database menjadi float number
   const lat = parseFloat(latitude);
   const lng = parseFloat(longitude);
 
-  // Fallback State jika koordinat kosong atau korup di database
   if (!latitude || !longitude || isNaN(lat) || isNaN(lng)) {
     return (
       <section className="py-8 border-b border-gray-100">
@@ -33,7 +30,6 @@ export function KosLocation({ latitude, longitude, alamat, namaKos }: KosLocatio
   const handleOpenNavigation = () => {
     setIsNavigating(true);
     
-    // Google Maps Universal Directions URL (Otomatis tracking dari lokasi saat ini ke tujuan)
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
     
     window.open(googleMapsUrl, "_blank", "noopener,noreferrer");
@@ -41,12 +37,10 @@ export function KosLocation({ latitude, longitude, alamat, namaKos }: KosLocatio
     setTimeout(() => setIsNavigating(false), 1000);
   };
 
-  // Gunakan Free Embed API untuk merender peta tanpa memakan kuota billing API key berbayar selama masa dev
   const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
 
   return (
     <section className="py-8 border-b border-gray-100">
-      {/* Header Lokasi */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold text-gray-900">Lokasi Kos</h2>
@@ -56,7 +50,6 @@ export function KosLocation({ latitude, longitude, alamat, namaKos }: KosLocatio
           </div>
         </div>
         
-        {/* Premium CTA Button untuk Rute Navigasi */}
         <button
           onClick={handleOpenNavigation}
           disabled={isNavigating}
@@ -67,7 +60,6 @@ export function KosLocation({ latitude, longitude, alamat, namaKos }: KosLocatio
         </button>
       </div>
 
-      {/* Container Iframe Peta Premium */}
       <div className="w-full h-80 sm:h-96 rounded-3xl overflow-hidden border border-gray-200/60 shadow-sm bg-gray-50 relative group">
         <iframe
           src={mapEmbedUrl}
