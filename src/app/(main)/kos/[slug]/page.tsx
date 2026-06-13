@@ -15,6 +15,7 @@ import { KosRules } from "@/features/properties/components/kos-rules";
 import { KosLocation } from "@/features/properties/components/kos-location";
 import { KosReviews } from "@/features/properties/components/kos-reviews";
 import { BookingCard } from "@/features/properties/components/booking-card";
+import { ReportModal } from "@/features/reports/components/report-modal";
 
 export default async function DetailKosPage({
   params,
@@ -61,9 +62,7 @@ export default async function DetailKosPage({
             <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold transition-colors">
               <IconShare size={18} /> Bagikan
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 font-semibold transition-colors">
-              <IconFlag size={18} /> Laporkan
-            </button>
+            <ReportModal idDetailKos={kos.id} namaKos={kos.nama_kos} />
           </div>
         </div>
       </div>
