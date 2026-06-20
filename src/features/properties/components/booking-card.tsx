@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createReservationAction } from "@/features/reservations/actions";
 import { 
   IconBrandWhatsapp, 
   IconMessageCircle, 
@@ -28,12 +29,13 @@ interface OwnerInfo {
 }
 
 interface BookingCardProps {
+  idDetailKos: string | number;
   kamarKos: KamarItem[];
   owner: OwnerInfo;
   namaKos: string;
 }
 
-export function BookingCard({ kamarKos, owner, namaKos }: BookingCardProps) {
+export function BookingCard({ idDetailKos, kamarKos, owner, namaKos }: BookingCardProps) {
   const [selectedRoomIdx, setSelectedRoomIdx] = useState<number>(0);
   const [durationType, setDurationType] = useState<"bulanan" | "harian">("bulanan");
   const [durationValue, setDurationValue] = useState<number>(1);
@@ -46,6 +48,9 @@ export function BookingCard({ kamarKos, owner, namaKos }: BookingCardProps) {
 
   const activeRoom = kamarKos[selectedRoomIdx];
   const isRoomFull = !activeRoom || activeRoom.kamar_tersedia <= 0;
+
+  const isBulananAvailable = activeRoom && Number(activeRoom.price_per_month) > 0;
+  const isHarianAvailable = activeRoom && Number(activeRoom.price_per_day) > 0;
 
   const basePrice = activeRoom 
     ? (durationType === "bulanan" ? Number(activeRoom.price_per_month) : Number(activeRoom.price_per_day))
@@ -71,23 +76,33 @@ export function BookingCard({ kamarKos, owner, namaKos }: BookingCardProps) {
     window.open(waUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleReservation = () => {
+  const handleReservation = async () => {
+    if (!activeRoom) return;
     setIsLoading(true);
     
     const payload = {
+      id_detail_kos: Number(idDetailKos),
       id_kamar: activeRoom.id,
-      tanggal_check_in: checkInDate, 
-      duration_values: durationType,
+      tanggal_check_in: checkInDate,
+      durasi_tipe: durationType,
       durasi: durationValue,
-      total_harga: totalPrice
+      total_harga: totalPrice,
+      nomor_kamar: activeRoom.nomor_kamar
     };
     
-    console.log("Mempersiapkan pembuatan Invoice & Data Reservasi:", payload);
-    
-    setTimeout(() => {
+    const result = await createReservationAction(payload);
+
+    if (result?.error) {
+      if (result.error === "PENDING_BIODATA") {
+        alert(result.message);
+        window.location.href = "/profile/settings"; 
+      } else {
+        alert(result.error); 
+      }
       setIsLoading(false);
-      alert("Payload reservasi siap dikirim ke server. Cek console!");
-    }, 1500);
+    } else if (result?.success && result?.invoice_url) {
+      window.location.href = result.invoice_url; 
+    }
   };
 
   return (
@@ -105,6 +120,16 @@ export function BookingCard({ kamarKos, owner, namaKos }: BookingCardProps) {
                   onClick={() => {
                     setSelectedRoomIdx(index);
                     setDurationValue(1);
+
+                    const newRoom = kamarKos[index];
+                    const hasBulanan = Number(newRoom.price_per_month) > 0;
+                    const hasHarian = Number(newRoom.price_per_day) > 0;
+
+                    if (durationType === "harian" && !hasHarian && hasBulanan) {
+                      setDurationType("bulanan");
+                    } else if (durationType === "bulanan" && !hasBulanan && hasHarian) {
+                      setDurationType("harian");
+                    }
                   }}
                   className={`flex flex-col justify-center items-start px-3.5 sm:px-4 py-3 rounded-2xl border transition-all cursor-pointer ${
                     isSelected 
@@ -130,19 +155,23 @@ export function BookingCard({ kamarKos, owner, namaKos }: BookingCardProps) {
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Skema</label>
           <div className="flex p-1 bg-gray-100 rounded-xl border border-gray-200/30">
-            <button
+          <button
+              type="button"
+              disabled={!isBulananAvailable}
               onClick={() => { setDurationType("bulanan"); setDurationValue(1); }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
-                durationType === "bulanan" ? "bg-white text-purple-600 shadow-sm" : "text-gray-500"
-              }`}
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+                !isBulananAvailable ? "opacity-40 cursor-not-allowed text-gray-400" : "cursor-pointer"
+              } ${durationType === "bulanan" && isBulananAvailable ? "bg-white text-purple-600 shadow-sm" : "text-gray-500"}`}
             >
               Bulanan
             </button>
             <button
+              type="button"
+              disabled={!isHarianAvailable}
               onClick={() => { setDurationType("harian"); setDurationValue(1); }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
-                durationType === "harian" ? "bg-white text-purple-600 shadow-sm" : "text-gray-500"
-              }`}
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+                !isHarianAvailable ? "opacity-40 cursor-not-allowed text-gray-400" : "cursor-pointer"
+              } ${durationType === "harian" && isHarianAvailable ? "bg-white text-purple-600 shadow-sm" : "text-gray-500"}`}
             >
               Harian
             </button>

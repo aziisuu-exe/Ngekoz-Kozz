@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateProfileSchema, type UpdateProfileInput } from "@/features/profile/schemas";
-import { updateProfileAction } from "@/features/profile/actions";
+import { updateProfileAction, getUserProfile } from "@/features/profile/actions"; // 👈 Pastikan getUserProfile di-import
 import { useSession } from "next-auth/react";
 import { IconUser, IconLoader2, IconShieldCheck, IconAlertTriangle } from "@tabler/icons-react";
 import Image from "next/image";
-import { Controller } from "react-hook-form";
 import {
   Select,
   SelectContent,
@@ -17,21 +17,58 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-
 export default function ProfileSettingsPage() {
   const { data: session, update: updateSession } = useSession();
+  const router = useRouter();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isGenderLocked, setIsGenderLocked] = useState<boolean>(false);
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<UpdateProfileInput>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
-      nama: session?.user?.name || "",
+      nama: "",
+      phone: "",
+      pekerjaan: "",
+      kelamin: "",
+      bio: "",
       newPassword: "",
       confirmPassword: "",
     },
   });
+
+  useEffect(() => {
+    async function fetchProfileData() {
+      if (session?.user) {
+        reset({
+          nama: session.user.name || "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+
+      if (session?.user?.id) {
+        const result = await getUserProfile();
+        if (result.success && result.data) {
+          if (result.data.kelamin) {
+            setIsGenderLocked(true);
+          }
+          reset({
+            nama: result.data.nama || session.user.name || "",
+            phone: result.data.phone || "",       
+            pekerjaan: result.data.pekerjaan || "",
+            kelamin: result.data.kelamin || "",     
+            bio: result.data.bio || "",
+            newPassword: "",
+            confirmPassword: "",
+          });
+        }
+      }
+    }
+
+    fetchProfileData();
+  }, [session?.user?.id, reset]);
 
   const onSubmit = (data: UpdateProfileInput) => {
     setErrorMsg(null);
@@ -53,6 +90,7 @@ export default function ProfileSettingsPage() {
         const sessionUpdate: any = { name: data.nama };
         if (result.newPhotoUrl) sessionUpdate.image = result.newPhotoUrl;
         await updateSession(sessionUpdate);
+        router.refresh();
       }
     });
   };
@@ -117,13 +155,25 @@ export default function ProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenis Kelamin {isGenderLocked && "(Terkunci)"}
+                </label>
                 <Controller
                   control={control}
                   name="kelamin"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                      <SelectTrigger className="w-full h-11 px-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-600 outline-none bg-white shadow-sm transition-all text-gray-700">
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || undefined}
+                      disabled={isGenderLocked} 
+                    >
+                      <SelectTrigger 
+                        className={`w-full h-11 px-4 rounded-xl border border-gray-300 outline-none transition-all ${
+                          isGenderLocked 
+                            ? "bg-gray-50 text-gray-500 cursor-not-allowed opacity-90" 
+                            : "bg-white shadow-sm focus:ring-2 focus:ring-purple-600 text-gray-700"
+                        }`}
+                      >
                         <SelectValue placeholder="Pilih Kelamin" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-gray-100 shadow-xl bg-white">
@@ -170,24 +220,6 @@ export default function ProfileSettingsPage() {
             </button>
           </div>
         </form>
-      </div>
-
-      <div className="bg-red-50 rounded-2xl shadow-sm border border-red-100 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div>
-          <h3 className="text-lg font-bold text-red-800 flex items-center gap-2 mb-2">
-            <IconAlertTriangle size={24} /> Zona Berbahaya
-          </h3>
-          <p className="text-sm text-red-600/80 max-w-xl">
-            Pengajuan hapus akun akan menghapus seluruh riwayat pesanan, ulasan, dan data profil Anda secara permanen. Tindakan ini tidak dapat dibatalkan.
-          </p>
-        </div>
-        <button 
-          type="button" 
-          onClick={() => alert("Fitur pengajuan hapus akun akan meneruskan tiket ke tim Support Ngekoz.")}
-          className="whitespace-nowrap px-6 py-3 bg-white border-2 border-red-200 text-red-600 font-bold rounded-xl hover:bg-red-600 hover:text-white transition-colors"
-        >
-          Ajukan Hapus Akun
-        </button>
       </div>
     </div>
   );

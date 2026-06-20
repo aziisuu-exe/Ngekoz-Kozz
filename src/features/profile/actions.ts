@@ -94,3 +94,22 @@ export async function updateProfileAction(formData: FormData) {
     return { error: "Terjadi kesalahan sistem." };
   }
 }
+
+export async function getUserProfile() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('nama, phone, pekerjaan, bio, kelamin')
+    .eq('id', session.user.id)
+    .single();
+
+  if (error || !data) return { error: "Failed to fetch profile" };
+  return { success: true, data };
+}

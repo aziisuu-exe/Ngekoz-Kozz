@@ -96,6 +96,7 @@ export default async function DetailKosPage({
 
           <div className="lg:col-span-1">
             <BookingCard 
+              idDetailKos={kos.id}
               kamarKos={kos.kamar_kos} 
               owner={kos.owner} 
               namaKos={kos.nama_kos}

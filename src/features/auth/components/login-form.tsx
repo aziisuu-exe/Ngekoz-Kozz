@@ -40,7 +40,7 @@ export function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} method="POST" className="space-y-4">
         {errorMsg && (
           <div className="p-3 bg-red-50 text-red-600 text-sm border border-red-200 rounded-md font-medium">
             {errorMsg}
