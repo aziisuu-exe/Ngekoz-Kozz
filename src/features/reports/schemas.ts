@@ -1,14 +1,16 @@
 import { z } from "zod";
 
-const reportCategoryEnum = z.enum([
+const REPORT_CATEGORIES = [
   'penipuan', 
   'informasi_tidak_sesuai', 
   'foto_tidak_sesuai', 
   'kos_tidak_tersedia', 
   'perilaku_tidak_pantas', 
   'lainnya'
-], {
-  required_error: "Silakan pilih kategori laporan",
+] as const;
+
+const reportCategoryEnum = z.enum(REPORT_CATEGORIES, {
+  message: "Silakan pilih kategori laporan" 
 });
 
 export const createReportSchema = z.object({

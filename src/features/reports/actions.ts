@@ -14,7 +14,7 @@ export async function submitReportAction(formData: FormData) {
   const validatedFields = createReportSchema.safeParse(data);
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.errors[0].message };
+    return { error: validatedFields.error.issues[0]?.message || "Validasi data gagal." };
   }
 
   const { id_detail_kos, jenis_laporan, kategori, deskripsi } = validatedFields.data;
