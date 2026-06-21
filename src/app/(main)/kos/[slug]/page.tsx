@@ -16,6 +16,7 @@ import { KosLocation } from "@/features/properties/components/kos-location";
 import { KosReviews } from "@/features/properties/components/kos-reviews";
 import { BookingCard } from "@/features/properties/components/booking-card";
 import { ReportModal } from "@/features/reports/components/report-modal";
+import { ViewCounter } from "@/features/properties/components/view-counter";
 
 export default async function DetailKosPage({
   params,
@@ -36,6 +37,7 @@ export default async function DetailKosPage({
 
   return (
     <div className="w-full bg-white pb-24">
+      <ViewCounter idKos={Number(kos.id)} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">

@@ -93,7 +93,7 @@ export async function createReservationAction(payload: z.infer<typeof reservatio
         id_kamar: Number(id_kamar),
         tanggal_check_in,
         tanggal_check_out: tglCheckOutStr,
-        duration_value: durasi_tipe,
+        duration_values: durasi_tipe,
         durasi,
         harga_sewa: total_harga,
         biaya_admin: biayaAdmin,

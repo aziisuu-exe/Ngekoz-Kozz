@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 
 export default function ProfileSettingsPage() {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -70,6 +70,12 @@ export default function ProfileSettingsPage() {
     fetchProfileData();
   }, [session?.user?.id, reset]);
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
   const onSubmit = (data: UpdateProfileInput) => {
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -95,7 +101,13 @@ export default function ProfileSettingsPage() {
     });
   };
 
-  if (!session) return null;
+  if (status === "loading" || !session) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <IconLoader2 className="animate-spin text-purple-600" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 w-full">
