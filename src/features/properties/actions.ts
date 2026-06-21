@@ -404,3 +404,35 @@ export async function getKosDetailBySlug(slug: string): Promise<KosDetailData | 
     return null;
   }
 }
+
+export async function incrementKosView(idKos: number) {
+  try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: currentData, error: fetchError } = await supabaseAdmin
+      .from('detail_kos') 
+      .select('view_count')    
+      .eq('id', idKos)
+      .single();
+
+    if (fetchError || !currentData) {
+      console.error("Error Fetch View:", fetchError); 
+      return;
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('detail_kos')
+      .update({ view_count: currentData.view_count + 1 }) 
+      .eq('id', idKos);
+
+    if (updateError) {
+      console.error("Error Update View:", updateError);
+    }
+
+  } catch (error) {
+    console.error("Gagal menambah view count:", error);
+  }
+}
