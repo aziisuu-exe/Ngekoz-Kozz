@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconAlertCircle } from "@tabler/icons-react";
 import { createReservationAction } from "@/features/reservations/actions";
 import { 
   IconBrandWhatsapp, 
@@ -45,6 +46,7 @@ export function BookingCard({ idDetailKos, kamarKos, owner, namaKos }: BookingCa
   });
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const activeRoom = kamarKos[selectedRoomIdx];
   const isRoomFull = !activeRoom || activeRoom.kamar_tersedia <= 0;
@@ -79,6 +81,7 @@ export function BookingCard({ idDetailKos, kamarKos, owner, namaKos }: BookingCa
   const handleReservation = async () => {
     if (!activeRoom) return;
     setIsLoading(true);
+    setErrorMsg(null);
     
     const payload = {
       id_detail_kos: Number(idDetailKos),
@@ -94,10 +97,12 @@ export function BookingCard({ idDetailKos, kamarKos, owner, namaKos }: BookingCa
 
     if (result?.error) {
       if (result.error === "PENDING_BIODATA") {
-        alert(result.message);
-        window.location.href = "/profile/settings"; 
+        setErrorMsg(result.message || "Silakan lengkapi biodata Anda terlebih dahulu.");
+        setTimeout(() => {
+          window.location.href = "/profile/settings";
+        }, 2500);
       } else {
-        alert(result.error); 
+        setErrorMsg(result.error); 
       }
       setIsLoading(false);
     } else if (result?.success && result?.invoice_url) {
@@ -225,6 +230,15 @@ export function BookingCard({ idDetailKos, kamarKos, owner, namaKos }: BookingCa
           )}
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <IconAlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm font-medium text-red-700 leading-relaxed">
+            {errorMsg}
+          </p>
+        </div>
+      )}
 
       <button
         onClick={handleReservation}
