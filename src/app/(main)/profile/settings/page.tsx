@@ -24,6 +24,7 @@ export default function ProfileSettingsPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isGenderLocked, setIsGenderLocked] = useState<boolean>(false);
+  const [dbPhoto, setDbPhoto] = useState<string | null>(null);
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
@@ -54,6 +55,10 @@ export default function ProfileSettingsPage() {
           if (result.data.kelamin) {
             setIsGenderLocked(true);
           }
+          if (result.data.profile_photo) {
+            setDbPhoto(result.data.profile_photo);
+          }
+          
           reset({
             nama: result.data.nama || session.user.name || "",
             phone: result.data.phone || "",       
@@ -115,8 +120,8 @@ export default function ProfileSettingsPage() {
         
         <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100">
           <div className="relative h-16 w-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center overflow-hidden border-2 border-purple-200">
-            {session.user.image ? (
-               <Image src={session.user.image} alt="Profile" fill className="object-cover" />
+            {(dbPhoto || session.user.image) ? (
+               <Image src={dbPhoto || session.user.image!} alt="Profile" fill className="object-cover" />
             ) : (
                <IconUser size={32} />
             )}
