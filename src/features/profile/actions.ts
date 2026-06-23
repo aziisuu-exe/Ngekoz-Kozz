@@ -106,7 +106,7 @@ export async function getUserProfile() {
 
   const { data, error } = await supabaseAdmin
     .from('users')
-    .select('nama, phone, pekerjaan, bio, kelamin')
+    .select('nama, phone, pekerjaan, bio, kelamin, profile_photo')
     .eq('id', session.user.id)
     .single();
 
