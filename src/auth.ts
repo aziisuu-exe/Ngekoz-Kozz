@@ -52,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           name: user.nama,
           role: user.role,
-          image: user.profile_photos,
+          image: user.profile_photo || null,
         };
       }
     })
@@ -64,11 +64,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
         token.picture = user.image;
       }
-      if (trigger === "update" && session?.name) {
+      if (trigger === "update" && session) {
         if (session.name) {
           token.name = session.name;
         }
-        if (session.image) {
+        if (session.image !== undefined) {
           token.picture = session.image;
         }
       }
