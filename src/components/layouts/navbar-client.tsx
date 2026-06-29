@@ -10,7 +10,9 @@ import {
   IconLogout, 
   IconCompass, 
   IconHelp, 
-  IconBook 
+  IconBook, 
+  IconSettings,
+  IconReceipt2
 } from "@tabler/icons-react";
 import Image from "next/image";
 import type { Session } from "next-auth";
@@ -40,11 +42,11 @@ export function NavbarClient({ session, logoutAction }: NavbarClientProps) {
           <IconCompass size={16} />
           Pencarian Kos
         </Link>
-        <Link href="#contact" className="hover:text-purple-600 transition-colors flex items-center gap-1">
+        <Link href="/hubungi-kami" className="hover:text-purple-600 transition-colors flex items-center gap-1">
           <IconHelp size={16} />
           Hubungi Kami
         </Link>
-        <Link href="#guide" className="hover:text-purple-600 transition-colors flex items-center gap-1">
+        <Link href="/panduan" className="hover:text-purple-600 transition-colors flex items-center gap-1">
           <IconBook size={16} />
           Panduan
         </Link>
@@ -76,7 +78,7 @@ export function NavbarClient({ session, logoutAction }: NavbarClientProps) {
               <div className="absolute right-0 mt-3 w-56 rounded-xl bg-white p-2 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                 <div className="px-3 py-2 border-b border-gray-50 mb-1">
                   <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-                  <p className="text-xs text-gray-500 truncate capitalize">{user?.role} Platform</p>
+                  <p className="text-xs text-gray-500 truncate capitalize">{user?.role}</p>
                 </div>
                 
                 <Link
@@ -84,8 +86,17 @@ export function NavbarClient({ session, logoutAction }: NavbarClientProps) {
                   onClick={() => setIsProfileOpen(false)}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors"
                 >
-                  <IconDashboard size={18} />
-                  Dashboard Saya
+                  <IconSettings size={18} />
+                  Settings
+                </Link>
+
+                <Link
+                  href="/profile/reservasi"
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                >
+                  <IconReceipt2 size={18} />
+                  Riwayat Reservasi
                 </Link>
 
                 <button

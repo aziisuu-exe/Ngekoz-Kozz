@@ -3,6 +3,7 @@ import { KosCard } from "@/features/properties/components/kos-card";
 import { IconFilterOff, IconChevronLeft, IconChevronRight, IconFilter } from "@tabler/icons-react";
 import Link from "next/link";
 import { SearchForm } from "@/features/search/components/search-form";
+import { ViewCounter } from "@/components/view-counter";
 
 export default async function SearchPage({
   searchParams,
@@ -21,6 +22,8 @@ export default async function SearchPage({
   const provinsiQuery = resolvedParams.provinsi || "semua";
   const kotaQuery = resolvedParams.kota || "semua";
   const currentPage = Number(resolvedParams.page) || 1;
+  const currentQuery = resolvedParams.q ? `?q=${resolvedParams.q}` : "";
+  const dynamicUrl = `/search${currentQuery}`;
   
   const result = await getSearchKos(searchQuery, genderQuery, provinsiQuery, kotaQuery, currentPage, 15);
   const { data: kosList, totalPages, totalItems } = result;
@@ -38,8 +41,11 @@ export default async function SearchPage({
   };
 
   return (
+    <>
     <div className="w-full min-h-screen bg-gray-50/50 pb-24">
       <div className="bg-white border-b border-gray-100 py-8 md:py-12">
+      
+      <ViewCounter url={dynamicUrl} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start gap-6">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">Temukan Tempat Tinggal Terbaik</h1>
@@ -123,6 +129,7 @@ export default async function SearchPage({
           </div>
         )}
       </div>
-    </div>
+    </div>  
+    </>
   );
 }
